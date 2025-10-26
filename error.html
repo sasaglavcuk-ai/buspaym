@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Помилка — BusPay</title>
+  <link rel="icon" href="/assets/logo.svg">
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body {
+      display: grid;
+      place-items: center;
+      height: 100vh;
+      background: #f5f9ff;
+      font-family: system-ui, sans-serif;
+      color: #0e2138;
+      text-align: center;
+      padding: 1rem;
+    }
+    .card {
+      background: #fff;
+      padding: 2rem 2.5rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      max-width: 400px;
+      width: 100%;
+      animation: fade 0.5s ease-out;
+    }
+    .logo {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.6rem;
+      color: #1e3a8a;
+    }
+    p {
+      margin: 0.5rem 0 1.5rem;
+      color: #4b5563;
+    }
+    .btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #1d4ed8;
+    }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/assets/logo.svg" alt="BusPay" class="logo" />
+    <h1>Щось пішло не так 😕</h1>
+    <p>Під час обробки платежу сталася помилка.<br>Будь ласка, спробуйте ще раз.</p>
+    <button class="btn" onclick="window.location.href='/'">Повернутись на головну</button>
+  </div>
+</body>
+</html>
