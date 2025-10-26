@@ -61,19 +61,21 @@ function validate(){
 // Відправка на наш бекенд /api/sheet
 async function sendToSheet(payload){
   try{
-    if(typeof SHEET_WEBHOOK_URL !== 'string' || !SHEET_WEBHOOK_URL) return;
-    await fetch(SHEET_WEBHOOK_URL, {
+    const r = await fetch(SHEET_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       keepalive: true
     });
-  }catch(e){ /* тихо ігноруємо */ }
+    // Тимчасове логування (допоможе знайти збій). Можна потім прибрати.
+    console.log('POST /api/sheet ->', r.status);
+    if (!r.ok) {
+      console.error('Proxy error:', await r.text());
+    }
+  }catch(e){
+    console.error('sendToSheet error', e);
+  }
 }
-
-async function onPay(){
-  const v = validate();
-  if(!v) return;
 
   // захист від подвійного кліку
   payBtn.disabled = true;
