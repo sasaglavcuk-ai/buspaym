@@ -91,11 +91,7 @@ async function onPay(){
   };
 
   // Відправляємо і одразу переходимо на "обробку"
-  sendToSheet(entry);
 
-  setTimeout(() => {
-    window.location.href = '/loading.html';
-  }, 300); // невелика пауза, щоб запит точно пішов
 }
 
 function startCountdown(minutes=5){
